@@ -1,34 +1,3 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Codespaces
-Marketplace
-Explore
- 
-@phwGithub 
-phwGithub
-/
-malloc-lab
-Public
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-malloc-lab/mm.c
-@pcw999
-pcw999 submit
-Latest commit 1991c7c 3 minutes ago
- History
- 2 contributors
-@phwGithub@pcw999
-221 lines (201 sloc)  7.68 KB
-
 /*
  * mm-naive.c - The fastest, least memory-efficient malloc package.
  * 
@@ -75,11 +44,11 @@ team_t team = {
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
 // macro
-#define WSIZE 4 //word and header/footer size
-#define DSIZE 8 //double word size
-#define CHUNKSIZE (1<<12) //extend heap size (4096byte) -> (4kb)
+#define WSIZE 4 //word and header, footer size is 4 bytes
+#define DSIZE 8 //double word size is 8 bytes
+#define CHUNKSIZE (1<<12) //add heap 4kb
 #define MAX(x, y) ((x)>(y)? (x) : (y)) //get bigger value
-#define PACK(size, alloc) ((size) | (alloc)) // size : block size // alloc : is it allocated ?
+#define PACK(size, alloc) ((size) | (alloc)) // alloc : is it allocated ? // size : block size
 #define GET(p) (*(unsigned int*)(p)) //reference p by pointer, you can use it to point to another block or to move another block
 #define PUT(p, val) (*(unsigned int*)(p) = (int)(val)) //Saving the block's address, when you read the header or footer for moving or connecting, can be used it
 #define GET_SIZE(p) (GET(p) & ~0x7) //only get block size by bit oper
@@ -108,9 +77,9 @@ int mm_init(void)
     PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1)); // create prologue header
     PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1)); // create prologue footer
     PUT(heap_listp + (3*WSIZE), PACK(0, 1)); // create epilogue block header
-    heap_listp += (2*WSIZE); // move point between prologue header and footer (behind header)
+    heap_listp += (2*WSIZE); // move point between prologue header and footer
 
-    if(extend_heap(CHUNKSIZE/WSIZE)==NULL) { //extend the empty heap with a free block of CHUNKSIZE bytes
+    if(extend_heap(CHUNKSIZE/WSIZE)==NULL) {
         return -1;
     }
     return 0;
@@ -131,7 +100,7 @@ static void *extend_heap(size_t words) { //case 1 = init_heap, case 2 = need mor
     return coalesce(bp);
 }
 
-static void *coalesce(void *bp) {
+static void *coalesce(void *bp) { //To prevent false fragmentation 
     size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp))); //check availability of previous blocks
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp))); //check availability of next blocks
     size_t size = GET_SIZE(HDRP(bp)); //check size of now blocks
@@ -190,13 +159,22 @@ void *mm_malloc(size_t size)
     return bp;
 }
 
-static void *find_fit(size_t asize) { //first fit
+static void *find_fit(size_t asize) { //best fit
     void *bp;
+    void *result;
+    int bit = 0;
     for (bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) { //start : heap_listp, end : epilogue
         if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) { // size ok, unallocated true
-            return bp;
+            if(bit == 0) {
+                result = bp;
+            }
+            if(GET_SIZE(result) > GET_SIZE(HDRP(bp))) {
+                result = bp;
+            }
+            bit = 1;
         }
     }
+    if (bit == 1) return result;
     return NULL;
 }
 
@@ -250,18 +228,3 @@ void *mm_realloc(void *ptr, size_t size)
     mm_free(ptr);
     return newp;
 }
-Footer
-© 2022 GitHub, Inc.
-Footer navigation
-Terms
-Privacy
-Security
-Status
-Docs
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
-malloc-lab/mm.c at main · phwGithub/malloc-lab
